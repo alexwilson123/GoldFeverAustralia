@@ -55,7 +55,7 @@ export function MapCanvas({
             timePeriod: filters.timePeriod,
             tenementStatus: filters.tenementStatus,
             historicalInactivityYears: String(filters.historicalInactivityYears),
-            count: "250"
+            count: "120"
           });
           const response = await fetch(`/api/features?${params.toString()}`);
           if (!response.ok) return [keyForLayer(layer.serviceId, layer.layerName), null] as const;

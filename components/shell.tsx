@@ -28,6 +28,10 @@ const defaultFilters: AppFilters = {
   historicalInactivityYears: 35
 };
 
+const aiEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_AI_ASSISTANT === "true" ||
+  process.env.NODE_ENV === "development";
+
 export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
   const { setTheme, resolvedTheme } = useTheme();
   const [catalog] = useState(initialCatalog);
@@ -155,6 +159,11 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
               <Sparkles size={16} />
               Prospecting Assistant
             </div>
+            <p className="mt-2 text-sm text-[color:var(--muted)]">
+              {aiEnabled
+                ? "AI refinement is enabled for this deployment."
+                : "Free-hosting mode is active. Prospect scoring runs with the built-in heuristic engine unless AI is explicitly enabled in environment variables."}
+            </p>
             <textarea
               className="mt-3 min-h-28 w-full rounded-2xl border border-[color:var(--border)] bg-transparent p-3 text-sm outline-none"
               value={analysisPrompt}
@@ -222,7 +231,7 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
               type="button"
               disabled={isAnalysing}
             >
-              {isAnalysing ? "Analysing..." : "Analyse Selected Area"}
+              {isAnalysing ? "Analysing..." : aiEnabled ? "Analyse Selected Area" : "Run Free Prospect Scan"}
             </button>
           </Panel>
 

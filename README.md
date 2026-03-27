@@ -76,8 +76,11 @@ npm run dev
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
 OPENAI_MODEL=gpt-4.1-mini
+ENABLE_AI_ASSISTANT=false
+NEXT_PUBLIC_ENABLE_AI_ASSISTANT=false
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 CACHE_TTL_SECONDS=1800
+MAX_FEATURES_PER_REQUEST=120
 ```
 
 ## Deployment
@@ -88,6 +91,23 @@ Vercel works well for this app:
 2. Import it into Vercel.
 3. Set the environment variables in the Vercel project settings.
 4. Deploy.
+
+### Free Vercel Mode
+
+For a no-cost deployment on the Vercel Hobby tier, use these settings:
+
+- `ENABLE_AI_ASSISTANT=false`
+- `NEXT_PUBLIC_ENABLE_AI_ASSISTANT=false`
+- Omit `OPENAI_API_KEY`
+- Keep `MAX_FEATURES_PER_REQUEST=120` or lower
+
+That mode keeps the app free to host by:
+
+- using the built-in heuristic prospecting engine instead of paid AI calls
+- reducing default WFS request sizes
+- relying on cached capability and feature responses
+
+If you later want AI summaries, add an API key and set both AI flags to `true`.
 
 ## Licensing And Compliance
 

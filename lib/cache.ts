@@ -24,3 +24,7 @@ export function writeCache<T>(key: string, value: T, ttlMs = defaultTtlMs) {
     expiresAt: Date.now() + ttlMs
   });
 }
+
+export function getMaxFeatureLimit() {
+  return Number(process.env.MAX_FEATURES_PER_REQUEST ?? "120");
+}

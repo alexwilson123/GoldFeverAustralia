@@ -1,5 +1,6 @@
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { NextRequest, NextResponse } from "next/server";
+import { getMaxFeatureLimit } from "@/lib/cache";
 import { filterFeature } from "@/lib/filters";
 import { getGeoJsonFeatures } from "@/lib/ogc";
 import type { AppFilters } from "@/lib/types";
@@ -15,7 +16,8 @@ export async function GET(request: NextRequest) {
   const serviceId = request.nextUrl.searchParams.get("serviceId");
   const layerName = request.nextUrl.searchParams.get("layerName");
   const bbox = parseBbox(request.nextUrl.searchParams.get("bbox"));
-  const count = Number(request.nextUrl.searchParams.get("count") ?? "400");
+  const maxFeatures = getMaxFeatureLimit();
+  const count = Math.min(Number(request.nextUrl.searchParams.get("count") ?? "120"), maxFeatures);
 
   if (!serviceId || !layerName) {
     return NextResponse.json({ error: "serviceId and layerName are required" }, { status: 400 });

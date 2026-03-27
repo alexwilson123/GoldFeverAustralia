@@ -8,6 +8,10 @@ export async function rewriteAnalysisWithLlm({
   prompt: string;
   draft: AnalysisResponse;
 }) {
+  if (process.env.ENABLE_AI_ASSISTANT !== "true") {
+    return draft;
+  }
+
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return draft;

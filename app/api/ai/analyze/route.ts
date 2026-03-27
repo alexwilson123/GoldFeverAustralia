@@ -1,6 +1,7 @@
 import type { Feature, FeatureCollection, Geometry } from "geojson";
 import { NextRequest, NextResponse } from "next/server";
 import { heuristicProspectingAnalysis } from "@/lib/analysis";
+import { getMaxFeatureLimit } from "@/lib/cache";
 import { bboxFromFeatureCollection } from "@/lib/geo";
 import { rewriteAnalysisWithLlm } from "@/lib/llm";
 import { getGeoJsonFeatures } from "@/lib/ogc";
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest) {
     ? bboxFromFeatureCollection(body.areaGeojson)
     : ([112, -44, 154, -10] as [number, number, number, number]);
   const inactivityYears = body.inactivityYears ?? 35;
+  const count = Math.min(60, getMaxFeatureLimit());
 
   const collections = await Promise.all(
     analysisTargets.map(async ({ serviceId, layerName }) => {
@@ -36,7 +38,7 @@ export async function POST(request: NextRequest) {
           serviceId,
           layerName,
           bbox,
-          count: 150
+          count
         })) as FeatureCollection;
       } catch {
         return {

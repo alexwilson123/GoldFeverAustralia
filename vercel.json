@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/ai/analyze/route.ts": {
+      "maxDuration": 20
+    },
+    "app/api/features/route.ts": {
+      "maxDuration": 15
+    },
+    "app/api/wms/route.ts": {
+      "maxDuration": 15
+    },
+    "app/api/capabilities/route.ts": {
+      "maxDuration": 10
+    }
+  }
+}
