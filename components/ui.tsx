@@ -15,7 +15,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        "rounded-3xl border p-4 shadow-[0_20px_70px_rgba(0,0,0,0.18)] backdrop-blur-xl",
+        "rounded-[28px] border p-4 shadow-[0_20px_70px_rgba(0,0,0,0.12)] backdrop-blur-xl",
         "border-[color:var(--border)] bg-[color:var(--panel)]",
         className,
       )}
@@ -35,8 +35,8 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.2em]",
-        "border-[color:var(--border)] text-[color:var(--muted)]",
+        "inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]",
+        "border-[color:var(--border)] bg-[color:var(--accent-soft)] text-[color:var(--accent-strong)]",
         className,
       )}
     >

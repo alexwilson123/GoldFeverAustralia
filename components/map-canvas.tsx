@@ -195,19 +195,41 @@ function renderPopup(properties: Record<string, unknown>, ai = false) {
   const headline = String(properties.name ?? properties.title ?? properties.identifier ?? "Feature");
   const commodity = String(properties.commodity ?? properties["Commodity"] ?? "Unknown commodity");
   const status = String(properties.status ?? properties.tenementType ?? "Status unavailable");
-  const source = String(properties["@layerName"] ?? properties["@featureType"] ?? "Source layer");
-  const reasoning = ai ? `<p><strong>Reasoning:</strong> ${String(properties.reasoning ?? "")}</p>` : "";
-  const risks = ai ? `<p><strong>Risks:</strong> ${String(properties.risks ?? "")}</p>` : "";
+  const source = friendlySource(String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer"));
+  const note = ai
+    ? `<p style="margin:8px 0 0"><strong>Why it stood out:</strong> ${String(properties.reasoning ?? "")}</p>`
+    : `<p style="margin:8px 0 0"><strong>What this is:</strong> ${friendlyStatus(status)}</p>`;
+  const risks = ai ? `<p style="margin:8px 0 0"><strong>Things to check:</strong> ${String(properties.risks ?? "")}</p>` : "";
 
   return `
     <div style="min-width:240px">
       <strong>${headline}</strong>
-      <p><strong>Commodity:</strong> ${commodity}</p>
-      <p><strong>Status:</strong> ${status}</p>
-      <p><strong>Layer:</strong> ${source}</p>
-      ${reasoning}
+      <p><strong>Main clue:</strong> ${commodity}</p>
+      <p><strong>Map layer:</strong> ${source}</p>
+      ${note}
       ${risks}
-      ${properties.identifier ? `<p><a href="${String(properties.identifier)}" target="_blank" rel="noreferrer">Original record</a></p>` : ""}
+      ${properties.identifier ? `<p style="margin:8px 0 0"><a href="${String(properties.identifier)}" target="_blank" rel="noreferrer">Open original government record</a></p>` : ""}
     </div>
   `;
+}
+
+function friendlySource(value: string) {
+  return value
+    .replace(/erl:/gi, "")
+    .replace(/ama:/gi, "")
+    .replace(/mt:/gi, "")
+    .replace(/mo:/gi, "")
+    .replace(/MineView/gi, "Old mines")
+    .replace(/MineralOccurrenceView/gi, "Mineral finds")
+    .replace(/MineralTenement/gi, "Tenements")
+    .replace(/MinOccView/gi, "Mineral finds")
+    .trim();
+}
+
+function friendlyStatus(value: string) {
+  const lower = value.toLowerCase();
+  if (lower.includes("closed") || lower.includes("expired")) return "Older or inactive ground";
+  if (lower.includes("active") || lower.includes("granted")) return "Currently active or held ground";
+  if (lower.includes("pending")) return "Application or pending ground";
+  return value;
 }

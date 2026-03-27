@@ -2,7 +2,17 @@
 
 import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
-import { Moon, Search, Share2, Sparkles, Sun } from "lucide-react";
+import {
+  Compass,
+  Moon,
+  Search,
+  Share2,
+  ShieldAlert,
+  Sparkles,
+  Star,
+  Sun,
+  Zap
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import type { FeatureCollection } from "geojson";
 import { Badge, Panel } from "@/components/ui";
@@ -38,20 +48,19 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
   const [capabilities, setCapabilities] = useState<Record<string, ServiceCapabilities>>({});
   const [activeLayers, setActiveLayers] = useState<ActiveLayerSelection[]>([
     { serviceId: "ga-wms", serviceKind: "WMS", layerName: "erl:MineView", visible: true },
-    { serviceId: "ga-wfs", serviceKind: "WFS", layerName: "erl:MineView", visible: true },
-    { serviceId: "nsw-wfs", serviceKind: "WFS", layerName: "mt:MineralTenement", visible: false }
+    { serviceId: "ga-wfs", serviceKind: "WFS", layerName: "erl:MineView", visible: true }
   ]);
   const [filters, setFilters] = useState(defaultFilters);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [analysisPrompt, setAnalysisPrompt] = useState(
-    "Find me good gold prospecting spots near old mines that appear to have low recent activity."
+    "Show me promising gold areas near old mines with little recent activity."
   );
   const [analysisArea, setAnalysisArea] = useState<FeatureCollection | null>(null);
   const [shareUrl, setShareUrl] = useState("");
   const [selectedFeatureCount, setSelectedFeatureCount] = useState(0);
   const [isAnalysing, setIsAnalysing] = useState(false);
 
-  const onlineSources = useMemo(
+  const loadedSources = useMemo(
     () => catalog.filter((service) => capabilities[service.id]),
     [capabilities, catalog]
   );
@@ -119,246 +128,236 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
 
   return (
     <main className="min-h-screen p-4 md:p-6">
-      <div className="mx-auto grid max-w-[1800px] gap-4 xl:grid-cols-[420px_minmax(0,1fr)]">
-        <Panel className="scrollbar-thin flex max-h-[calc(100vh-2rem)] flex-col gap-4 overflow-y-auto md:max-h-[calc(100vh-3rem)]">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <Badge>AussieProspect AI</Badge>
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-                Australian gold, precious metal and gem prospecting intelligence
-              </h1>
-              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
-                Live government geoscience layers, AI-assisted research, shareable maps and export tools for amateur prospectors and fossickers.
-              </p>
-            </div>
-            <button
-              className="rounded-2xl border border-[color:var(--border)] p-3"
-              onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-              type="button"
-              aria-label="Toggle theme"
-            >
-              {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          </div>
-
-          <Panel className="bg-[color:var(--panel-strong)]">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              <Search size={16} />
-              How To Use
-            </div>
-            <ol className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--muted)]">
-              <li>1. Load official WFS/WMS layers from the layer manager.</li>
-              <li>2. Draw a search area or zoom to your target district.</li>
-              <li>3. Filter for commodities, historical activity and tenement status.</li>
-              <li>4. Ask the AI assistant for top candidate spots, then inspect the new overlay on the map.</li>
-            </ol>
-          </Panel>
-
-          <Panel className="bg-[color:var(--panel-strong)]">
-            <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              <Sparkles size={16} />
-              Prospecting Assistant
-            </div>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              {aiEnabled
-                ? "AI refinement is enabled for this deployment."
-                : "Free-hosting mode is active. Prospect scoring runs with the built-in heuristic engine unless AI is explicitly enabled in environment variables."}
-            </p>
-            <textarea
-              className="mt-3 min-h-28 w-full rounded-2xl border border-[color:var(--border)] bg-transparent p-3 text-sm outline-none"
-              value={analysisPrompt}
-              onChange={(event) => setAnalysisPrompt(event.target.value)}
-            />
-            <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-              <label className="space-y-2">
-                <span className="text-[color:var(--muted)]">Commodity</span>
-                <select
-                  className="w-full rounded-2xl border border-[color:var(--border)] bg-transparent p-2"
-                  value={filters.commodity}
-                  onChange={(event) =>
-                    setFilters((current) => ({ ...current, commodity: event.target.value as AppFilters["commodity"] }))
-                  }
-                >
-                  {["gold", "silver", "platinum", "opal", "sapphire", "ruby", "emerald", "diamond", "gems", "all"].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-2">
-                <span className="text-[color:var(--muted)]">Tenement</span>
-                <select
-                  className="w-full rounded-2xl border border-[color:var(--border)] bg-transparent p-2"
-                  value={filters.tenementStatus}
-                  onChange={(event) =>
-                    setFilters((current) => ({
-                      ...current,
-                      tenementStatus: event.target.value as AppFilters["tenementStatus"]
-                    }))
-                  }
-                >
-                  {["all", "active", "expired", "pending"].map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-            <label className="mt-3 block text-sm">
-              <span className="text-[color:var(--muted)]">
-                Historical inactivity threshold: {filters.historicalInactivityYears} years
-              </span>
-              <input
-                className="mt-2 w-full"
-                type="range"
-                min={20}
-                max={80}
-                step={5}
-                value={filters.historicalInactivityYears}
-                onChange={(event) =>
-                  setFilters((current) => ({
-                    ...current,
-                    historicalInactivityYears: Number(event.target.value)
-                  }))
-                }
-              />
-            </label>
-            <button
-              className="mt-4 w-full rounded-2xl bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
-              onClick={runAnalysis}
-              type="button"
-              disabled={isAnalysing}
-            >
-              {isAnalysing ? "Analysing..." : aiEnabled ? "Analyse Selected Area" : "Run Free Prospect Scan"}
-            </button>
-          </Panel>
-
-          <Panel>
-            <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              National Summary
-            </div>
-            <p className="mt-2 text-sm text-[color:var(--muted)]">
-              {onlineSources.length} service endpoints online, {Object.values(capabilities).reduce((acc, service) => acc + service.layers.length, 0)} discoverable layers, {selectedFeatureCount} visible features in the current working set.
-            </p>
-          </Panel>
-
-          <Panel>
-            <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              Official Sources
-            </div>
-            <div className="mt-3 space-y-3">
-              {catalog.map((service) => (
-                <div key={service.id} className="rounded-2xl border border-[color:var(--border)] p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="font-semibold">{service.name}</div>
-                      <div className="text-xs uppercase tracking-[0.16em] text-[color:var(--muted)]">
-                        {service.jurisdiction} · {service.kind}
-                      </div>
-                    </div>
-                    <button
-                      className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs"
-                      onClick={() => loadCapabilities(service.id)}
-                      type="button"
-                    >
-                      Discover
-                    </button>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{service.description}</p>
-                  {capabilities[service.id] ? (
-                    <LayerPicker
-                      serviceId={service.id}
-                      serviceKind={service.kind}
-                      activeLayers={activeLayers}
-                      layers={capabilities[service.id].layers}
-                      onToggle={toggleLayer}
-                    />
-                  ) : (
-                    <p className="mt-3 text-xs text-[color:var(--muted)]">
-                      Pulls live GetCapabilities metadata from the official endpoint or fallback candidates.
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </Panel>
-
-          <Panel className="bg-[color:var(--panel-strong)]">
-            <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              Legal And Data Notes
-            </div>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--muted)]">
-              <li>Fossicking permits, landholder permission and mining or access approvals may be required.</li>
-              <li>Always verify current tenements, land access, environmental restrictions and heritage protections before travel.</li>
-              <li>Government geoscience layers are displayed for informational use only and remain subject to each source agency’s licence and attribution terms.</li>
-            </ul>
-          </Panel>
-
-          {analysis ? (
-            <Panel className="bg-[color:var(--panel-strong)]">
-              <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-                AI Results
+      <div className="mx-auto max-w-[1760px] space-y-4">
+        <Panel className="hero-card overflow-hidden bg-[color:var(--panel-strong)] p-0">
+          <div className="grid gap-6 px-5 py-6 md:px-8 md:py-8 xl:grid-cols-[1.2fr_0.8fr]">
+            <div className="space-y-5">
+              <Badge>Find better places to explore</Badge>
+              <div className="space-y-3">
+                <h1 className="max-w-3xl text-4xl font-semibold leading-tight md:text-5xl">
+                  A cleaner, easier way to explore old Australian gold and gem country
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-[color:var(--muted)] md:text-lg">
+                  Browse old mines, mineral finds and tenement clues on one map, then get simple prospecting suggestions without needing to understand technical GIS jargon.
+                </p>
               </div>
-              <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">{analysis.summary}</p>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-3">
                 <button
-                  className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-sm"
-                  onClick={() => exportGeoJson("aussieprospect-analysis.geojson", analysis.mapOverlay)}
+                  className="rounded-full bg-[color:var(--accent)] px-5 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+                  onClick={runAnalysis}
                   type="button"
+                  disabled={isAnalysing}
                 >
-                  Export GeoJSON
+                  {isAnalysing ? "Scanning area..." : "Find Good Spots"}
                 </button>
                 <button
-                  className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-sm"
-                  onClick={() => exportKml("aussieprospect-analysis.kml", analysis.mapOverlay)}
-                  type="button"
-                >
-                  Export KML
-                </button>
-                <button
-                  className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-sm"
-                  onClick={() => exportPdfReport("aussieprospect-report.pdf", analysis)}
-                  type="button"
-                >
-                  Export PDF
-                </button>
-                <button
-                  className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-sm"
+                  className="rounded-full border border-[color:var(--border)] px-5 py-3 text-sm font-semibold"
                   onClick={saveBookmark}
                   type="button"
                 >
-                  <Share2 className="mr-1 inline-block" size={14} />
-                  Save / Share View
+                  Save This View
+                </button>
+                <button
+                  className="rounded-full border border-[color:var(--border)] px-4 py-3"
+                  onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+                  type="button"
+                  aria-label="Toggle theme"
+                >
+                  {resolvedTheme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
               </div>
-              {shareUrl ? (
-                <p className="mt-3 break-all text-xs text-[color:var(--muted)]">{shareUrl}</p>
-              ) : null}
-              <div className="mt-4 space-y-3">
-                {analysis.candidates.map((candidate) => (
-                  <div key={candidate.id} className="rounded-2xl border border-[color:var(--border)] p-3">
+              <div className="grid gap-3 md:grid-cols-3">
+                <QuickStat icon={<Compass size={16} />} label="Map layers ready" value={`${loadedSources.length}`} />
+                <QuickStat icon={<Star size={16} />} label="Visible places" value={`${selectedFeatureCount}`} />
+                <QuickStat icon={<Zap size={16} />} label="Results mode" value={aiEnabled ? "AI + smart scan" : "Smart scan"} />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1">
+              <InfoCard
+                title="How it works"
+                text="Turn on useful layers, draw an area, then let the app highlight old workings and quieter ground nearby."
+              />
+              <InfoCard
+                title="Best for beginners"
+                text="The app hides most technical service details and focuses on plain-English guidance, map clues and safer next steps."
+              />
+              <InfoCard
+                title="Always double-check access"
+                text="Permits, landowner permission, current tenements and environmental rules still matter before you go."
+                icon={<ShieldAlert size={16} />}
+              />
+            </div>
+          </div>
+        </Panel>
+
+        <div className="grid gap-4 xl:grid-cols-[390px_minmax(0,1fr)]">
+          <div className="scrollbar-thin flex max-h-[calc(100vh-15rem)] flex-col gap-4 overflow-y-auto">
+            <Panel className="bg-[color:var(--panel-strong)]">
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                <Sparkles size={16} />
+                Prospect Helper
+              </div>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                Ask in plain English, like “show me old gold areas near Bendigo” or “find opal country with old activity”.
+              </p>
+              <textarea
+                className="mt-3 min-h-28 w-full rounded-3xl border border-[color:var(--border)] bg-transparent p-4 text-sm outline-none"
+                value={analysisPrompt}
+                onChange={(event) => setAnalysisPrompt(event.target.value)}
+              />
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <SimpleSelect
+                  label="Looking for"
+                  value={filters.commodity}
+                  options={["gold", "silver", "platinum", "opal", "sapphire", "ruby", "emerald", "diamond", "gems", "all"]}
+                  onChange={(value) =>
+                    setFilters((current) => ({ ...current, commodity: value as AppFilters["commodity"] }))
+                  }
+                />
+                <SimpleSelect
+                  label="Tenement view"
+                  value={filters.tenementStatus}
+                  options={["all", "active", "expired", "pending"]}
+                  onChange={(value) =>
+                    setFilters((current) => ({
+                      ...current,
+                      tenementStatus: value as AppFilters["tenementStatus"]
+                    }))
+                  }
+                />
+              </div>
+              <label className="mt-4 block text-sm">
+                <span className="text-[color:var(--muted)]">
+                  Prefer older ground: {filters.historicalInactivityYears}+ years since known activity
+                </span>
+                <input
+                  className="mt-2 w-full"
+                  type="range"
+                  min={20}
+                  max={80}
+                  step={5}
+                  value={filters.historicalInactivityYears}
+                  onChange={(event) =>
+                    setFilters((current) => ({
+                      ...current,
+                      historicalInactivityYears: Number(event.target.value)
+                    }))
+                  }
+                />
+              </label>
+              <button
+                className="mt-4 w-full rounded-full bg-[color:var(--accent)] px-4 py-3 text-sm font-semibold text-black transition hover:opacity-90"
+                onClick={runAnalysis}
+                type="button"
+                disabled={isAnalysing}
+              >
+                {isAnalysing ? "Searching map..." : "Scan This Area"}
+              </button>
+            </Panel>
+
+            <Panel>
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                <Search size={16} />
+                Useful Map Layers
+              </div>
+              <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                Pick a few simple overlays. You do not need every data layer turned on at once.
+              </p>
+              <div className="mt-3 space-y-3">
+                {catalog.map((service) => (
+                  <div key={service.id} className="rounded-3xl border border-[color:var(--border)] p-3">
                     <div className="flex items-center justify-between gap-3">
-                      <div className="font-semibold">{candidate.name}</div>
-                      <Badge>{Math.round(candidate.confidence * 100)}% confidence</Badge>
+                      <div>
+                        <div className="font-semibold">{friendlyServiceName(service.name)}</div>
+                        <div className="text-xs text-[color:var(--muted)]">{friendlyServiceHint(service.jurisdiction)}</div>
+                      </div>
+                      <button
+                        className="rounded-full border border-[color:var(--border)] px-3 py-1 text-xs"
+                        onClick={() => loadCapabilities(service.id)}
+                        type="button"
+                      >
+                        Load
+                      </button>
                     </div>
-                    <p className="mt-2 text-sm text-[color:var(--muted)]">{candidate.reasoning.join(" ")}</p>
+                    {capabilities[service.id] ? (
+                      <LayerPicker
+                        serviceId={service.id}
+                        serviceKind={service.kind}
+                        layers={capabilities[service.id].layers}
+                        activeLayers={activeLayers}
+                        onToggle={toggleLayer}
+                      />
+                    ) : (
+                      <p className="mt-2 text-xs leading-5 text-[color:var(--muted)]">
+                        Loads live layers from the official {service.jurisdiction} source.
+                      </p>
+                    )}
                   </div>
                 ))}
               </div>
             </Panel>
-          ) : null}
-        </Panel>
 
-        <div className="min-h-[70vh] overflow-hidden rounded-[2rem] border border-[color:var(--border)] shadow-[0_20px_70px_rgba(0,0,0,0.18)]">
-          <ProspectMap
-            activeLayers={activeLayers}
-            analysisOverlay={analysis?.mapOverlay ?? null}
-            filters={filters}
-            onAreaChange={setAnalysisArea}
-            onFeatureCountChange={setSelectedFeatureCount}
-          />
+            {analysis ? (
+              <Panel className="bg-[color:var(--panel-strong)]">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                      Suggested Areas
+                    </div>
+                    <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{analysis.summary}</p>
+                  </div>
+                  <Badge>{analysis.candidates.length} picks</Badge>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <ActionChip label="GeoJSON" onClick={() => exportGeoJson("aussieprospect-analysis.geojson", analysis.mapOverlay)} />
+                  <ActionChip label="KML" onClick={() => exportKml("aussieprospect-analysis.kml", analysis.mapOverlay)} />
+                  <ActionChip label="PDF" onClick={() => exportPdfReport("aussieprospect-report.pdf", analysis)} />
+                  <ActionChip label="Share" onClick={saveBookmark} icon={<Share2 size={14} />} />
+                </div>
+                {shareUrl ? <p className="mt-3 break-all text-xs text-[color:var(--muted)]">{shareUrl}</p> : null}
+                <div className="mt-4 space-y-3">
+                  {analysis.candidates.map((candidate, index) => (
+                    <div key={candidate.id} className="rounded-3xl border border-[color:var(--border)] p-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+                            Pick {index + 1}
+                          </div>
+                          <div className="mt-1 text-lg font-semibold">{candidate.name}</div>
+                        </div>
+                        <Badge>{Math.round(candidate.confidence * 100)}% match</Badge>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                        {candidate.reasoning[0]}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </Panel>
+            ) : (
+              <Panel>
+                <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                  Quick Start
+                </div>
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--muted)]">
+                  <li>Draw a shape on the map around the district you want to explore.</li>
+                  <li>Turn on old mines and mineral occurrence layers first.</li>
+                  <li>Use the scan button to highlight promising areas directly on the map.</li>
+                </ul>
+              </Panel>
+            )}
+          </div>
+
+          <div className="overflow-hidden rounded-[32px] border border-[color:var(--border)] shadow-[0_20px_70px_rgba(0,0,0,0.16)]">
+            <ProspectMap
+              activeLayers={activeLayers}
+              analysisOverlay={analysis?.mapOverlay ?? null}
+              filters={filters}
+              onAreaChange={setAnalysisArea}
+              onFeatureCountChange={setSelectedFeatureCount}
+            />
+          </div>
         </div>
       </div>
     </main>
@@ -380,7 +379,7 @@ function LayerPicker({
 }) {
   const important = layers
     .filter((layer) => /(mine|occurrence|deposit|tenement|resource|opal|gold|gem)/i.test(layer.name + layer.title))
-    .slice(0, 12);
+    .slice(0, 8);
 
   return (
     <div className="mt-3 space-y-2">
@@ -392,23 +391,136 @@ function LayerPicker({
           return (
             <button
               key={layer.name}
-              className="flex w-full items-start justify-between rounded-2xl border border-[color:var(--border)] px-3 py-2 text-left text-sm"
+              className={`flex w-full items-center justify-between rounded-2xl border px-3 py-3 text-left text-sm transition ${
+                active
+                  ? "border-transparent bg-[color:var(--accent-soft)]"
+                  : "border-[color:var(--border)]"
+              }`}
               onClick={() => onToggle(serviceId, serviceKind, layer.name)}
               type="button"
             >
               <span>
-                <span className="block font-medium">{layer.title}</span>
-                <span className="block text-xs text-[color:var(--muted)]">{layer.name}</span>
+                <span className="block font-medium">{friendlyLayerTitle(layer.title)}</span>
+                <span className="block text-xs text-[color:var(--muted)]">{active ? "Showing on map" : "Tap to show"}</span>
               </span>
-              <span className="text-xs">{active ? "On" : "Off"}</span>
+              <span className="text-xs font-semibold">{active ? "On" : "Off"}</span>
             </button>
           );
         })
       ) : (
         <div className="text-xs text-[color:var(--muted)]">
-          No matching prospecting layers were auto-identified yet for this service.
+          No beginner-friendly layers were found automatically for this source yet.
         </div>
       )}
     </div>
   );
+}
+
+function QuickStat({
+  icon,
+  label,
+  value
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--panel)] p-4">
+      <div className="flex items-center gap-2 text-[color:var(--accent)]">{icon}</div>
+      <div className="mt-3 text-2xl font-semibold">{value}</div>
+      <div className="text-sm text-[color:var(--muted)]">{label}</div>
+    </div>
+  );
+}
+
+function InfoCard({
+  title,
+  text,
+  icon
+}: {
+  title: string;
+  text: string;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl border border-[color:var(--border)] bg-[color:var(--panel)] p-4">
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        {icon}
+        {title}
+      </div>
+      <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">{text}</p>
+    </div>
+  );
+}
+
+function SimpleSelect({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="space-y-2">
+      <span className="text-[color:var(--muted)]">{label}</span>
+      <select
+        className="w-full rounded-2xl border border-[color:var(--border)] bg-transparent p-3"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function ActionChip({
+  label,
+  onClick,
+  icon
+}: {
+  label: string;
+  onClick: () => void;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <button
+      className="rounded-full border border-[color:var(--border)] px-3 py-1.5 text-sm"
+      onClick={onClick}
+      type="button"
+    >
+      {icon ? <span className="mr-1 inline-block">{icon}</span> : null}
+      {label}
+    </button>
+  );
+}
+
+function friendlyServiceName(name: string) {
+  return name
+    .replace("EarthResource", "Australian Resources")
+    .replace("WFS", "")
+    .replace("WMS", "")
+    .trim();
+}
+
+function friendlyServiceHint(jurisdiction: string) {
+  return jurisdiction === "National" ? "Australia-wide data" : `${jurisdiction} government data`;
+}
+
+function friendlyLayerTitle(title: string) {
+  return title
+    .replace(/Mineral Occurrence/gi, "Mineral finds")
+    .replace(/Mineral Tenement/gi, "Tenements")
+    .replace(/MineView/gi, "Old mines")
+    .replace(/View/gi, "")
+    .trim();
 }

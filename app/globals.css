@@ -3,29 +3,33 @@
 @import "leaflet-draw/dist/leaflet.draw.css";
 
 :root {
-  --background: #f6f3eb;
-  --foreground: #171717;
-  --panel: rgba(255, 251, 241, 0.88);
-  --panel-strong: rgba(255, 248, 233, 0.97);
-  --border: rgba(98, 74, 34, 0.16);
-  --accent: #b57622;
-  --accent-strong: #864b06;
-  --success: #2b7a54;
-  --muted: #6f6658;
-  --map-water: #85b6d8;
+  --background: #f4efe5;
+  --foreground: #1b1a18;
+  --panel: rgba(255, 252, 246, 0.8);
+  --panel-strong: rgba(255, 250, 241, 0.94);
+  --border: rgba(115, 92, 45, 0.12);
+  --accent: #d38d2c;
+  --accent-strong: #9c5b08;
+  --accent-soft: #fff1d6;
+  --success: #2f7d61;
+  --muted: #6b655d;
+  --map-water: #93bbd4;
+  --hero-shadow: 0 30px 90px rgba(92, 63, 18, 0.14);
 }
 
 .dark {
-  --background: #0f1720;
-  --foreground: #ecf4f5;
-  --panel: rgba(13, 25, 31, 0.86);
-  --panel-strong: rgba(11, 21, 28, 0.95);
-  --border: rgba(173, 210, 206, 0.16);
-  --accent: #f1b54d;
-  --accent-strong: #ffcb74;
-  --success: #79c69f;
-  --muted: #9ab3b4;
-  --map-water: #1b4363;
+  --background: #10161b;
+  --foreground: #eef3ee;
+  --panel: rgba(15, 24, 28, 0.8);
+  --panel-strong: rgba(11, 19, 24, 0.94);
+  --border: rgba(214, 197, 151, 0.12);
+  --accent: #f2b552;
+  --accent-strong: #ffd28c;
+  --accent-soft: rgba(242, 181, 82, 0.12);
+  --success: #80d1a8;
+  --muted: #9eafab;
+  --map-water: #1d4058;
+  --hero-shadow: 0 30px 90px rgba(0, 0, 0, 0.35);
 }
 
 * {
@@ -37,12 +41,12 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(circle at top left, rgba(236, 200, 113, 0.16), transparent 22%),
-    radial-gradient(circle at 80% 20%, rgba(86, 141, 111, 0.16), transparent 20%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    radial-gradient(circle at top left, rgba(227, 173, 66, 0.2), transparent 24%),
+    radial-gradient(circle at 85% 15%, rgba(84, 135, 114, 0.18), transparent 22%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
     var(--background);
   color: var(--foreground);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
 a {
@@ -73,6 +77,13 @@ textarea {
   border-radius: 14px !important;
 }
 
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background: var(--panel-strong);
+  color: var(--foreground);
+  border-bottom-color: var(--border);
+}
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 10px;
 }
@@ -80,4 +91,8 @@ textarea {
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: rgba(160, 129, 79, 0.45);
   border-radius: 999px;
+}
+
+.hero-card {
+  box-shadow: var(--hero-shadow);
 }
