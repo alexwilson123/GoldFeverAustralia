@@ -34,12 +34,12 @@ export async function POST(request: NextRequest) {
   const collections = await Promise.all(
     analysisTargets.map(async ({ serviceId, layerName }) => {
       try {
-        return (await getGeoJsonFeatures({
+        return await getGeoJsonFeatures({
           serviceId,
           layerName,
           bbox,
           count
-        })) as FeatureCollection;
+        });
       } catch {
         return {
           type: "FeatureCollection",

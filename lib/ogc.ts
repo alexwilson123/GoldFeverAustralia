@@ -1,3 +1,4 @@
+import type { FeatureCollection } from "geojson";
 import { XMLParser } from "fast-xml-parser";
 import { readCache, writeCache } from "@/lib/cache";
 import { getSourceById } from "@/lib/data-sources";
@@ -162,7 +163,7 @@ export async function getGeoJsonFeatures({
   layerName: string;
   bbox?: [number, number, number, number];
   count?: number;
-}) {
+}): Promise<FeatureCollection> {
   const service = getSourceById(serviceId);
   if (!service || service.kind !== "WFS") {
     throw new Error(`Service ${serviceId} is not a WFS source`);
@@ -183,7 +184,7 @@ export async function getGeoJsonFeatures({
   }
 
   const cacheKey = `features:${requestUrl.toString()}`;
-  const cached = readCache<Record<string, unknown>>(cacheKey);
+  const cached = readCache<FeatureCollection>(cacheKey);
   if (cached) return cached;
 
   const response = await fetch(requestUrl, {
@@ -200,7 +201,7 @@ export async function getGeoJsonFeatures({
     throw new Error(`Feature request failed with ${response.status}`);
   }
 
-  const json = (await response.json()) as Record<string, unknown>;
+  const json = (await response.json()) as FeatureCollection;
   writeCache(cacheKey, json);
   return json;
 }

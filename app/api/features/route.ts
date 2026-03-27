@@ -35,12 +35,12 @@ export async function GET(request: NextRequest) {
   };
 
   try {
-    const raw = (await getGeoJsonFeatures({
+    const raw = await getGeoJsonFeatures({
       serviceId,
       layerName,
       bbox,
       count
-    })) as FeatureCollection;
+    });
 
     const features = (raw.features ?? [])
       .filter((feature): feature is Feature<Geometry> => Boolean(feature?.geometry))
