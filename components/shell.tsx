@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo, useState } from "react";
 import {
   Compass,
+  Info,
   Moon,
   Search,
   Share2,
@@ -58,6 +59,10 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
   const [analysisArea, setAnalysisArea] = useState<FeatureCollection | null>(null);
   const [shareUrl, setShareUrl] = useState("");
   const [selectedFeatureCount, setSelectedFeatureCount] = useState(0);
+  const [selectedFeature, setSelectedFeature] = useState<{
+    properties: Record<string, unknown>;
+    ai: boolean;
+  } | null>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
 
   const loadedSources = useMemo(
@@ -347,6 +352,23 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
                 </ul>
               </Panel>
             )}
+
+            <Panel className="bg-[color:var(--panel-strong)]">
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                <Info size={16} />
+                Selected Place
+              </div>
+              {selectedFeature ? (
+                <SelectedFeatureCard
+                  properties={selectedFeature.properties}
+                  ai={selectedFeature.ai}
+                />
+              ) : (
+                <p className="mt-3 text-sm leading-6 text-[color:var(--muted)]">
+                  Click a marker on the map to see more details here, including status, owner, dates and the original government record link.
+                </p>
+              )}
+            </Panel>
           </div>
 
           <div className="overflow-hidden rounded-[32px] border border-[color:var(--border)] shadow-[0_20px_70px_rgba(0,0,0,0.16)]">
@@ -356,6 +378,7 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
               filters={filters}
               onAreaChange={setAnalysisArea}
               onFeatureCountChange={setSelectedFeatureCount}
+              onFeatureSelect={setSelectedFeature}
             />
           </div>
         </div>
@@ -501,6 +524,77 @@ function ActionChip({
       {icon ? <span className="mr-1 inline-block">{icon}</span> : null}
       {label}
     </button>
+  );
+}
+
+function SelectedFeatureCard({
+  properties,
+  ai
+}: {
+  properties: Record<string, unknown>;
+  ai: boolean;
+}) {
+  const headline = String(properties.name ?? properties.title ?? properties.identifier ?? "Selected place");
+  const commodity = String(properties.commodity ?? properties["Commodity"] ?? "Unknown");
+  const source = friendlyLayerTitle(
+    String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer")
+  );
+  const rows = [
+    { label: "Status", value: properties.status ?? properties.tenementType },
+    { label: "Owner", value: properties.owner },
+    { label: "Area", value: properties.area },
+    { label: "Grant date", value: properties.grantDate },
+    { label: "Expiry date", value: properties.expireDate },
+    { label: "Observation", value: properties.observationMethod },
+    { label: "Accuracy", value: properties.positionalAccuracy }
+  ].filter((item) => item.value !== undefined && item.value !== null && String(item.value).trim() !== "");
+
+  return (
+    <div className="mt-3 space-y-3">
+      <div>
+        <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">
+          {ai ? "Suggested area" : "Map location"}
+        </div>
+        <div className="mt-1 text-xl font-semibold">{headline}</div>
+      </div>
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-3">
+        <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Main clue</div>
+        <div className="mt-1 font-medium">{commodity}</div>
+      </div>
+      <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-3">
+        <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Layer</div>
+        <div className="mt-1 font-medium">{source}</div>
+      </div>
+      {ai && properties.reasoning ? (
+        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-3 text-sm leading-6 text-[color:var(--muted)]">
+          <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Why it stood out</div>
+          <div className="mt-1">{String(properties.reasoning)}</div>
+        </div>
+      ) : null}
+      {rows.length ? (
+        <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-3">
+          <div className="text-xs uppercase tracking-[0.18em] text-[color:var(--muted)]">Details</div>
+          <div className="mt-2 space-y-2 text-sm">
+            {rows.map((row) => (
+              <div key={row.label} className="flex items-start justify-between gap-4">
+                <span className="text-[color:var(--muted)]">{row.label}</span>
+                <span className="max-w-[55%] text-right font-medium">{String(row.value)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {properties.identifier ? (
+        <a
+          className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-semibold"
+          href={String(properties.identifier)}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open original government record
+        </a>
+      ) : null}
+    </div>
   );
 }
 

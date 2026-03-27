@@ -23,13 +23,15 @@ export function MapCanvas({
   analysisOverlay,
   filters,
   onAreaChange,
-  onFeatureCountChange
+  onFeatureCountChange,
+  onFeatureSelect
 }: {
   activeLayers: ActiveLayerSelection[];
   analysisOverlay: FeatureCollection | null;
   filters: AppFilters;
   onAreaChange: (value: FeatureCollection | null) => void;
   onFeatureCountChange: (count: number) => void;
+  onFeatureSelect: (feature: { properties: Record<string, unknown>; ai: boolean } | null) => void;
 }) {
   const [featureCollections, setFeatureCollections] = useState<Record<string, FeatureCollection>>({});
 
@@ -166,6 +168,9 @@ export function MapCanvas({
               })
           }
           onEachFeature={(feature, layer) => {
+            layer.on("click", () => {
+              onFeatureSelect({ properties: (feature.properties ?? {}) as Record<string, unknown>, ai: false });
+            });
             if (feature.geometry.type !== "Point") {
               layer.bindPopup(renderPopup(feature.properties ?? {}));
             }
@@ -183,7 +188,11 @@ export function MapCanvas({
               color: "#082f2d",
               weight: 2,
               fillOpacity: 0.88
-            }).bindPopup(renderPopup(feature.properties ?? {}, true))
+            })
+              .bindPopup(renderPopup(feature.properties ?? {}, true))
+              .on("click", () => {
+                onFeatureSelect({ properties: (feature.properties ?? {}) as Record<string, unknown>, ai: true });
+              })
           }
         />
       ) : null}
