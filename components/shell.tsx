@@ -539,6 +539,7 @@ function SelectedFeatureCard({
   const source = friendlyLayerTitle(
     String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer")
   );
+  const originalRecordUrl = resolveOriginalRecordUrl(properties);
   const rows = [
     { label: "Status", value: properties.status ?? properties.tenementType },
     { label: "Owner", value: properties.owner },
@@ -584,10 +585,10 @@ function SelectedFeatureCard({
           </div>
         </div>
       ) : null}
-      {properties.identifier ? (
+      {originalRecordUrl ? (
         <a
           className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-semibold"
-          href={String(properties.identifier)}
+          href={originalRecordUrl}
           target="_blank"
           rel="noreferrer"
         >
@@ -617,4 +618,36 @@ function friendlyLayerTitle(title: string) {
     .replace(/MineView/gi, "Old mines")
     .replace(/View/gi, "")
     .trim();
+}
+
+function resolveOriginalRecordUrl(properties: Record<string, unknown>) {
+  const serviceId = String(properties["@serviceId"] ?? "");
+  const candidates = [properties.specification_uri, properties.identifier, properties.uri]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim());
+
+  for (const candidate of candidates) {
+    if (/^https?:\/\//i.test(candidate)) {
+      return candidate;
+    }
+
+    if (candidate.startsWith("/")) {
+      const base = getServiceOrigin(serviceId);
+      return base ? `${base}${candidate}` : "";
+    }
+  }
+
+  return "";
+}
+
+function getServiceOrigin(serviceId: string) {
+  if (serviceId.startsWith("ga-")) return "https://services.ga.gov.au";
+  if (serviceId.startsWith("nsw-")) return "https://gs.geoscience.nsw.gov.au";
+  if (serviceId.startsWith("qld-")) return "https://geology.information.qld.gov.au";
+  if (serviceId.startsWith("vic-")) return "https://geology.data.vic.gov.au";
+  if (serviceId.startsWith("wa-")) return "https://geossdi.dmp.wa.gov.au";
+  if (serviceId.startsWith("sa-")) return "https://sarigdata.pir.sa.gov.au";
+  if (serviceId.startsWith("tas-")) return "https://listdata.thelist.tas.gov.au";
+  if (serviceId.startsWith("nt-")) return "https://geology.data.nt.gov.au";
+  return "";
 }

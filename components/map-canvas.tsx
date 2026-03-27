@@ -212,6 +212,7 @@ function renderPopup(properties: Record<string, unknown>, ai = false) {
   const status = String(properties.status ?? properties.tenementType ?? "Status unavailable");
   const source = friendlySource(String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer"));
   const details = buildDetailRows(properties);
+  const originalRecordUrl = resolveOriginalRecordUrl(properties);
   const note = ai
     ? `<p style="margin:8px 0 0"><strong>Why it stood out:</strong> ${String(properties.reasoning ?? "")}</p>`
     : `<p style="margin:8px 0 0"><strong>What this is:</strong> ${friendlyStatus(status)}</p>`;
@@ -225,7 +226,7 @@ function renderPopup(properties: Record<string, unknown>, ai = false) {
       ${note}
       ${details}
       ${risks}
-      ${properties.identifier ? `<p style="margin:8px 0 0"><a href="${String(properties.identifier)}" target="_blank" rel="noreferrer">Open original government record</a></p>` : ""}
+      ${originalRecordUrl ? `<p style="margin:8px 0 0"><a href="${originalRecordUrl}" target="_blank" rel="noreferrer">Open original government record</a></p>` : ""}
     </div>
   `;
 }
@@ -275,4 +276,40 @@ function friendlyStatus(value: string) {
   if (lower.includes("active") || lower.includes("granted")) return "Currently active or held ground";
   if (lower.includes("pending")) return "Application or pending ground";
   return value;
+}
+
+function resolveOriginalRecordUrl(properties: Record<string, unknown>) {
+  const serviceId = String(properties["@serviceId"] ?? "");
+  const candidates = [
+    properties.specification_uri,
+    properties.identifier,
+    properties.uri
+  ]
+    .filter((value): value is string => typeof value === "string" && value.trim().length > 0)
+    .map((value) => value.trim());
+
+  for (const candidate of candidates) {
+    if (/^https?:\/\//i.test(candidate)) {
+      return candidate;
+    }
+
+    if (candidate.startsWith("/")) {
+      const base = getServiceOrigin(serviceId);
+      return base ? `${base}${candidate}` : candidate;
+    }
+  }
+
+  return null;
+}
+
+function getServiceOrigin(serviceId: string) {
+  if (serviceId.startsWith("ga-")) return "https://services.ga.gov.au";
+  if (serviceId.startsWith("nsw-")) return "https://gs.geoscience.nsw.gov.au";
+  if (serviceId.startsWith("qld-")) return "https://geology.information.qld.gov.au";
+  if (serviceId.startsWith("vic-")) return "https://geology.data.vic.gov.au";
+  if (serviceId.startsWith("wa-")) return "https://geossdi.dmp.wa.gov.au";
+  if (serviceId.startsWith("sa-")) return "https://sarigdata.pir.sa.gov.au";
+  if (serviceId.startsWith("tas-")) return "https://listdata.thelist.tas.gov.au";
+  if (serviceId.startsWith("nt-")) return "https://geology.data.nt.gov.au";
+  return "";
 }
