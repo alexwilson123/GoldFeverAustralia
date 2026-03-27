@@ -63,6 +63,7 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
     properties: Record<string, unknown>;
     ai: boolean;
   } | null>(null);
+  const [showVerifiedFossicking, setShowVerifiedFossicking] = useState(true);
   const [isAnalysing, setIsAnalysing] = useState(false);
 
   const loadedSources = useMemo(
@@ -303,6 +304,35 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
               </div>
             </Panel>
 
+            <Panel className="bg-[color:var(--panel-strong)]">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-sm font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
+                    Verified Fossicking Areas
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-[color:var(--muted)]">
+                    Shows official Queensland fossicking district reference markers. These are approximate guide points only, not exact legal boundaries.
+                  </p>
+                </div>
+                <button
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold ${
+                    showVerifiedFossicking
+                      ? "border-transparent bg-[color:var(--accent)] text-black"
+                      : "border-[color:var(--border)]"
+                  }`}
+                  onClick={() => setShowVerifiedFossicking((value) => !value)}
+                  type="button"
+                >
+                  {showVerifiedFossicking ? "On" : "Off"}
+                </button>
+              </div>
+              <ul className="mt-3 space-y-2 text-sm leading-6 text-[color:var(--muted)]">
+                <li>Queensland fossicking licence requirements still apply.</li>
+                <li>Click a blue marker to open the official government page.</li>
+                <li>Use the linked PDF maps and special conditions for exact permitted areas.</li>
+              </ul>
+            </Panel>
+
             {analysis ? (
               <Panel className="bg-[color:var(--panel-strong)]">
                 <div className="flex items-center justify-between gap-3">
@@ -379,6 +409,7 @@ export function Shell({ initialCatalog }: { initialCatalog: DataService[] }) {
               onAreaChange={setAnalysisArea}
               onFeatureCountChange={setSelectedFeatureCount}
               onFeatureSelect={setSelectedFeature}
+              showVerifiedFossicking={showVerifiedFossicking}
             />
           </div>
         </div>
@@ -540,6 +571,8 @@ function SelectedFeatureCard({
     String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer")
   );
   const originalRecordUrl = resolveOriginalRecordUrl(properties);
+  const officialFossickingUrl =
+    typeof properties.sourceUrl === "string" ? properties.sourceUrl : "";
   const rows = [
     { label: "Status", value: properties.status ?? properties.tenementType },
     { label: "Owner", value: properties.owner },
@@ -584,6 +617,16 @@ function SelectedFeatureCard({
             ))}
           </div>
         </div>
+      ) : null}
+      {officialFossickingUrl ? (
+        <a
+          className="inline-flex rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-semibold"
+          href={officialFossickingUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Open official fossicking page
+        </a>
       ) : null}
       {originalRecordUrl ? (
         <a

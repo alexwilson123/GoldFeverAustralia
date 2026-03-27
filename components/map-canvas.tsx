@@ -14,6 +14,7 @@ import {
   WMSTileLayer
 } from "react-leaflet";
 import { EditControl } from "react-leaflet-draw";
+import { verifiedFossickingAreas } from "@/lib/fossicking";
 import type { ActiveLayerSelection, AppFilters } from "@/lib/types";
 
 const australiaCenter: LatLngExpression = [-25.2744, 133.7751];
@@ -24,7 +25,8 @@ export function MapCanvas({
   filters,
   onAreaChange,
   onFeatureCountChange,
-  onFeatureSelect
+  onFeatureSelect,
+  showVerifiedFossicking
 }: {
   activeLayers: ActiveLayerSelection[];
   analysisOverlay: FeatureCollection | null;
@@ -32,6 +34,7 @@ export function MapCanvas({
   onAreaChange: (value: FeatureCollection | null) => void;
   onFeatureCountChange: (count: number) => void;
   onFeatureSelect: (feature: { properties: Record<string, unknown>; ai: boolean } | null) => void;
+  showVerifiedFossicking: boolean;
 }) {
   const [featureCollections, setFeatureCollections] = useState<Record<string, FeatureCollection>>({});
 
@@ -197,6 +200,30 @@ export function MapCanvas({
         />
       ) : null}
 
+      {showVerifiedFossicking ? (
+        <GeoJSON
+          data={verifiedFossickingAreas}
+          pointToLayer={(feature, latlng) =>
+            L.circleMarker(latlng, {
+              radius: 9,
+              fillColor: "#4aa0ff",
+              color: "#10355e",
+              weight: 2,
+              fillOpacity: 0.95
+            })
+              .bindPopup(renderFossickingPopup(feature.properties ?? {}))
+              .bindTooltip("Verified fossicking guidance", {
+                direction: "top",
+                offset: [0, -8],
+                opacity: 0.9
+              })
+              .on("click", () => {
+                onFeatureSelect({ properties: (feature.properties ?? {}) as Record<string, unknown>, ai: false });
+              })
+          }
+        />
+      ) : null}
+
       <ScaleControl />
     </MapContainer>
   );
@@ -227,6 +254,20 @@ function renderPopup(properties: Record<string, unknown>, ai = false) {
       ${details}
       ${risks}
       ${originalRecordUrl ? `<p style="margin:8px 0 0"><a href="${originalRecordUrl}" target="_blank" rel="noreferrer">Open original government record</a></p>` : ""}
+    </div>
+  `;
+}
+
+function renderFossickingPopup(properties: Record<string, unknown>) {
+  return `
+    <div style="min-width:280px; max-width:320px">
+      <strong style="font-size:16px">${String(properties.name ?? "Verified fossicking area")}</strong>
+      <p><strong>State:</strong> ${String(properties.jurisdiction ?? "Unknown")}</p>
+      <p><strong>Reference town:</strong> ${String(properties.town ?? "See official page")}</p>
+      <p><strong>Permit:</strong> ${String(properties.permit ?? "Check official rules")}</p>
+      <p><strong>Access:</strong> ${String(properties.access ?? "Check official conditions")}</p>
+      <p><strong>Important:</strong> ${String(properties.approximation ?? "")}</p>
+      ${properties.sourceUrl ? `<p style="margin:8px 0 0"><a href="${String(properties.sourceUrl)}" target="_blank" rel="noreferrer">Open official government fossicking page</a></p>` : ""}
     </div>
   `;
 }
