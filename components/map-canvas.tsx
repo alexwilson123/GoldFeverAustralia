@@ -152,12 +152,18 @@ export function MapCanvas({
           })}
           pointToLayer={(feature, latlng) =>
             L.circleMarker(latlng, {
-              radius: 6,
+              radius: 8,
               fillColor: "#f2b84b",
               color: "#432d11",
-              weight: 1,
-              fillOpacity: 0.9
-            }).bindPopup(renderPopup(feature.properties ?? {}))
+              weight: 2,
+              fillOpacity: 0.92
+            })
+              .bindPopup(renderPopup(feature.properties ?? {}))
+              .bindTooltip("Click for details", {
+                direction: "top",
+                offset: [0, -8],
+                opacity: 0.9
+              })
           }
           onEachFeature={(feature, layer) => {
             if (feature.geometry.type !== "Point") {
@@ -196,21 +202,49 @@ function renderPopup(properties: Record<string, unknown>, ai = false) {
   const commodity = String(properties.commodity ?? properties["Commodity"] ?? "Unknown commodity");
   const status = String(properties.status ?? properties.tenementType ?? "Status unavailable");
   const source = friendlySource(String(properties["@layerName"] ?? properties["@featureType"] ?? "Map layer"));
+  const details = buildDetailRows(properties);
   const note = ai
     ? `<p style="margin:8px 0 0"><strong>Why it stood out:</strong> ${String(properties.reasoning ?? "")}</p>`
     : `<p style="margin:8px 0 0"><strong>What this is:</strong> ${friendlyStatus(status)}</p>`;
   const risks = ai ? `<p style="margin:8px 0 0"><strong>Things to check:</strong> ${String(properties.risks ?? "")}</p>` : "";
 
   return `
-    <div style="min-width:240px">
-      <strong>${headline}</strong>
+    <div style="min-width:280px; max-width:320px">
+      <strong style="font-size:16px">${headline}</strong>
       <p><strong>Main clue:</strong> ${commodity}</p>
       <p><strong>Map layer:</strong> ${source}</p>
       ${note}
+      ${details}
       ${risks}
       ${properties.identifier ? `<p style="margin:8px 0 0"><a href="${String(properties.identifier)}" target="_blank" rel="noreferrer">Open original government record</a></p>` : ""}
     </div>
   `;
+}
+
+function buildDetailRows(properties: Record<string, unknown>) {
+  const fields = [
+    { label: "Status", keys: ["status", "tenementType"] },
+    { label: "Owner", keys: ["owner"] },
+    { label: "Area", keys: ["area"] },
+    { label: "Grant date", keys: ["grantDate"] },
+    { label: "Expiry", keys: ["expireDate"] },
+    { label: "Observation", keys: ["observationMethod"] },
+    { label: "Accuracy", keys: ["positionalAccuracy"] }
+  ];
+
+  const rows = fields
+    .map(({ label, keys }) => {
+      const value = keys
+        .map((key) => properties[key])
+        .find((item) => item !== undefined && item !== null && String(item).trim() !== "");
+
+      if (!value) return "";
+      return `<p style="margin:6px 0 0"><strong>${label}:</strong> ${String(value)}</p>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  return rows ? `<div style="margin-top:10px">${rows}</div>` : "";
 }
 
 function friendlySource(value: string) {
